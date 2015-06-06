@@ -283,6 +283,7 @@ static int _GSopen(void** dsp, char* title, int renderer, int threads = -1)
 				return -1;
 
 			s_renderer = renderer;
+			theApp.SetConfig("renderer", renderer);
 		}
 
 		if (s_gs->m_wnd == NULL)

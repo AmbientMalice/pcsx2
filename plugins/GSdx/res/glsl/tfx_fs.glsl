@@ -719,6 +719,12 @@ void ps_main()
 	c.a = 0.5f;
 #endif
 
+#if PS_G2A
+	// Replace the 7 lsb of alpha by the green channel
+	// Let's keep the msb @ 0
+	c.a = float(uint((c.g * 255.0f) + 0.5f) & 0x7Fu) / 255.0f;
+#endif
+
 	// Must be done before alpha correction
 	float alpha = c.a * 255.0f / 128.0f;
 

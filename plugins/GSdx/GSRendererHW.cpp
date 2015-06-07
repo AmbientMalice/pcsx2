@@ -322,6 +322,36 @@ void GSRendererHW::RoundSpriteOffset()
 	}
 }
 
+void GSRendererHW::ConvertVertexForGreenToAlphaEffect()
+{
+	// It is a hack to avoid complex conversion between 16b/32b buffer
+	GL_INS("Convert Vertex for the green to alpha effect");
+
+	ASSERT(m_vt.m_primclass == GS_SPRITE_CLASS);
+	const GIFRegXYOFFSET& o = m_context->XYOFFSET;
+	size_t count = m_vertex.next;
+	GSVertex* v = &m_vertex.buff[0];
+
+	for(size_t i = 0; i < count; i += 2) {
+		v[i].XYZ.X   -= 128u;
+		v[i+1].U     += 128u;
+
+		// Height is too big (2x).
+#if 1
+		int tex_offset = v[i].V & 0xF;
+		GSVector4i offset(o.OFY, tex_offset, o.OFY, tex_offset);
+
+		GSVector4i tmp(v[i].XYZ.Y, v[i].V, v[i+1].XYZ.Y, v[i+1].V);
+		tmp = ((tmp - offset) >> 1) + offset;
+
+		v[i].XYZ.Y   = tmp.x;
+		v[i].V       = tmp.y;
+		v[i+1].XYZ.Y = tmp.z;
+		v[i+1].V     = tmp.w;
+#endif
+	}
+}
+
 void GSRendererHW::Draw()
 {
 	if(m_dev->IsLost() || GSRenderer::IsBadFrame(m_skip, m_userhacks_skipdraw)) {
@@ -389,6 +419,12 @@ void GSRendererHW::Draw()
 		{
 			m_mem.m_clut.Read32(context->TEX0, env.TEXA);
 		}
+	}
+
+	if ((context->FRAME.FBMSK == 0x3FFF) && (context->FRAME.PSM == 0x2) && (context->TEX0.PSM & 2)) {
+		// 16 bits input/ 16 bits output and a partial mask means that we will copy
+		// bits 8-15 to alpha
+		ConvertVertexForGreenToAlphaEffect();
 	}
 
 	if(s_dump)

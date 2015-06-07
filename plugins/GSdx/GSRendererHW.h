@@ -139,6 +139,8 @@ private:
 
 	template <bool linear> void RoundSpriteOffset();
 
+	void ConvertVertexForGreenToAlphaEffect();
+
 protected:
 	GSTextureCache* m_tc;
 

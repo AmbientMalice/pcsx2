@@ -719,10 +719,24 @@ void ps_main()
 	c.a = 0.5f;
 #endif
 
+#if PS_G2A || PS_A2G
+	uvec4 denorm = uvec4(vec4(c.g, c.a, TA.x, TA.y) * 255.0f + 0.5f);
+#endif
 #if PS_G2A
 	// Replace the 7 lsb of alpha by the green channel
 	// Let's keep the msb @ 0
-	c.a = float(uint((c.g * 255.0f) + 0.5f) & 0x7Fu) / 255.0f;
+	//c.a = float(denorm.x & 0x7Fu) / 255.0f;
+	if (bool(denorm.x & 0x80u))
+		c.a = float((denorm.x & 0x7Fu) | (denorm.w & 0x80u)) / 255.0f;
+	else
+		c.a = float((denorm.x & 0x7Fu) | (denorm.z & 0x80u)) / 255.0f;
+#endif
+#if PS_A2G
+	//c.g = float(denorm.y & 0x7Fu) / 255.0f;
+	if (bool(denorm.y & 0x80u))
+		c.g = float((denorm.y & 0x7Fu) | (denorm.w & 0x80u)) / 255.0f;
+	else
+		c.g = float((denorm.y & 0x7Fu) | (denorm.z & 0x80u)) / 255.0f;
 #endif
 
 	// Must be done before alpha correction

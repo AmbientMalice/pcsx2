@@ -147,6 +147,7 @@ protected:
 	virtual void DrawPrims(GSTexture* rt, GSTexture* ds, GSTextureCache::Source* tex) = 0;
 
 	int m_userhacks_round_sprite_offset;
+	bool m_g2a;
 
 public:
 	GSRendererHW(GSTextureCache* tc);

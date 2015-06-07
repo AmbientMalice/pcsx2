@@ -317,8 +317,9 @@ class GSDeviceOGL : public GSDevice
 				uint32 ltf:1;
 				uint32 ifmt:2;
 				uint32 g2a:1;
+				uint32 a2g:1;
 
-				uint32 _free1:1;
+				//uint32 _free1:0;
 
 				// Word 2
 				uint32 blend:8;

@@ -251,10 +251,19 @@ void GSRendererOGL::DrawPrims(GSTexture* rt, GSTexture* ds, GSTextureCache::Sour
 
 	// Copy green depth to alpha depth
 	if ((context->FRAME.FBMSK == 0x3FFF) && (context->FRAME.PSM == 0x2) && (context->TEX0.PSM & 2)) {
-		ps_sel.g2a = true;
+		if (m_g2a) {
+			ps_sel.g2a = true;
+			om_csel.wrgba = 0x8;
+		} else {
+			ps_sel.a2g = true;
+			om_csel.wrgba = 0x2;
+		}
 		ps_sel.dfmt = 0;
+
 	} else {
 		ps_sel.dfmt = GSLocalMemory::m_psm[context->FRAME.PSM].fmt;
+
+		om_csel.wrgba = ~GSVector4i::load((int)context->FRAME.FBMSK).eq8(GSVector4i::xffffffff()).mask();
 	}
 
 	// Format of the output
@@ -294,7 +303,6 @@ void GSRendererOGL::DrawPrims(GSTexture* rt, GSTexture* ds, GSTextureCache::Sour
 		}
 	}
 
-	om_csel.wrgba = ps_sel.g2a ? 0x8 : ~GSVector4i::load((int)context->FRAME.FBMSK).eq8(GSVector4i::xffffffff()).mask();
 	if (ps_sel.dfmt == 1) {
 		if (ALPHA.C == 1) {
 			// 24 bits no alpha channel so use 1.0f fix factor as equivalent
@@ -480,8 +488,10 @@ void GSRendererOGL::DrawPrims(GSTexture* rt, GSTexture* ds, GSTextureCache::Sour
 	}
 
 	ps_sel.fba = context->FBA.FBA;
+	// TODO deprecat this stuff
 	ps_sel.aout = context->FRAME.PSM == PSM_PSMCT16 || context->FRAME.PSM == PSM_PSMCT16S || (context->FRAME.FBMSK & 0xff000000) == 0x7f000000 ? 1 : 0;
 	ps_sel.aout &= !ps_sel.g2a;
+	ps_sel.aout &= !ps_sel.a2g;
 		
 	if (UserHacks_AlphaHack) ps_sel.aout = 1;
 
@@ -534,7 +544,7 @@ void GSRendererOGL::DrawPrims(GSTexture* rt, GSTexture* ds, GSTextureCache::Sour
 
 		ps_sel.wms = context->CLAMP.WMS;
 		ps_sel.wmt = context->CLAMP.WMT;
-		if (ps_sel.g2a) {
+		if (ps_sel.g2a || ps_sel.a2g) {
 			ps_sel.fmt = 0;
 		} else if (tex->m_palette) {
 			// In standard mode palette is only used when alpha channel of the RT is

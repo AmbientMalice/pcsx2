@@ -29,6 +29,7 @@ GSRendererHW::GSRendererHW(GSTextureCache* tc)
 	, m_reset(false)
 	, m_upscale_multiplier(1)
 	, m_tc(tc)
+	, m_g2a(false)
 {
 	m_upscale_multiplier = theApp.GetConfig("upscale_multiplier", 1);
 	m_userhacks_skipdraw = !!theApp.GetConfig("UserHacks", 0) ? theApp.GetConfig("UserHacks_SkipDraw", 0) : 0;
@@ -325,16 +326,31 @@ void GSRendererHW::RoundSpriteOffset()
 void GSRendererHW::ConvertVertexForGreenToAlphaEffect()
 {
 	// It is a hack to avoid complex conversion between 16b/32b buffer
-	GL_INS("Convert Vertex for the green to alpha effect");
 
 	ASSERT(m_vt.m_primclass == GS_SPRITE_CLASS);
 	const GIFRegXYOFFSET& o = m_context->XYOFFSET;
 	size_t count = m_vertex.next;
 	GSVertex* v = &m_vertex.buff[0];
 
+	m_g2a = (((v[0].XYZ.X - o.OFX) & 0xFF) == 128);
+
+	if (m_g2a) {
+		GL_INS("Convert Vertex for the Green to Alpha effect");
+	} else {
+		GL_INS("Convert Vertex for the Alpha to Green effect");
+	}
+
+
 	for(size_t i = 0; i < count; i += 2) {
-		v[i].XYZ.X   -= 128u;
-		v[i+1].U     += 128u;
+		if (m_g2a) {
+			// Green to Alpha
+			v[i].XYZ.X   -= 128u;
+			v[i+1].U     += 128u;
+		} else {
+			// Alpha to Green
+			v[i+1].XYZ.X += 128u;
+			v[i].U       -= 128u;
+		}
 
 		// Height is too big (2x).
 #if 1

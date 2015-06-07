@@ -205,6 +205,7 @@ void SysMtgsThread::OpenPlugin()
 			GSsetVsync( false );
 			Console.Indent(2).WriteLn( "Vsync temporarily disabled" );
 		}
+		renderswitch = false;
 	}
 	else
 	{

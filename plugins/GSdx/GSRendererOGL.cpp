@@ -249,6 +249,28 @@ void GSRendererOGL::DrawPrims(GSTexture* rt, GSTexture* ds, GSTextureCache::Sour
 	GSDeviceOGL::OMColorMaskSelector om_csel;
 	GSDeviceOGL::OMDepthStencilSelector om_dssel;
 
+#ifdef ENABLE_OGL_DEBUG
+	{
+		uint8 r_mask = (context->FRAME.FBMSK >> 0)  & 0xFF;
+		uint8 g_mask = (context->FRAME.FBMSK >> 8)  & 0xFF;
+		uint8 b_mask = (context->FRAME.FBMSK >> 16) & 0xFF;
+		uint8 a_mask = (context->FRAME.FBMSK >> 24) & 0xFF;
+		uint8 bits = (GSLocalMemory::m_psm[context->FRAME.PSM].fmt == 2) ? 16 : 32;
+		if (r_mask != 0 && r_mask != 0xFF) {
+			GL_INS("ERROR: not supported r_mask:%x on %d bits format", r_mask, bits);
+		}
+		if (g_mask != 0 && g_mask != 0xFF) {
+			GL_INS("ERROR: not supported g_mask:%x on %d bits format", g_mask, bits);
+		}
+		if (b_mask != 0 && b_mask != 0xFF) {
+			GL_INS("ERROR: not supported b_mask:%x on %d bits format", b_mask, bits);
+		}
+		if (a_mask != 0 && a_mask != 0xFF) {
+			GL_INS("ERROR: not supported a_mask:%x on %d bits format", a_mask, bits);
+		}
+	}
+#endif
+
 	// Copy green depth to alpha depth
 	if ((context->FRAME.FBMSK == 0x3FFF) && (context->FRAME.PSM == 0x2) && (context->TEX0.PSM & 2)) {
 		if (m_g2a) {

@@ -224,9 +224,13 @@ GSTextureCache::Target* GSTextureCache::LookupTarget(const GIFRegTEX0& TEX0, int
 			dst = t;
 
 #ifdef ENABLE_OGL_DEBUG
-			// Likely the root cause of tons and tons of bug
-			if (dst->m_TEX0.PSM != TEX0.PSM) {
-				GL_INS("TC: ERROR: use a target with format 0x%x as 0x%x without any conversion", dst->m_TEX0.PSM, TEX0.PSM);
+			// Likely the root cause of tons and tons of bug (for example vertical strips)
+			if (dst->m_created_as_TEX0.PSM != TEX0.PSM) {
+				// 32 bits/ 24 conversion is easy to handle, don't warn about it
+				if (((dst->m_created_as_TEX0.PSM & 0xF) > 1) || ((TEX0.PSM & 0xF) > 1)) {
+					GL_INS("TC: ERROR: use a target with format 0x%x but created as 0x%x without any conversion", TEX0.PSM, dst->m_created_as_TEX0.PSM);
+				}
+
 			}
 #endif
 
@@ -1030,6 +1034,7 @@ GSTextureCache::Source::Source(GSRenderer* r, const GIFRegTEX0& TEX0, const GIFR
 {
 	m_TEX0 = TEX0;
 	m_TEXA = TEXA;
+	m_created_as_TEX0 = TEX0;
 
 	memset(m_valid, 0, sizeof(m_valid));
 
@@ -1262,6 +1267,7 @@ GSTextureCache::Target::Target(GSRenderer* r, const GIFRegTEX0& TEX0, uint8* tem
 	, m_used(false)
 {
 	m_TEX0 = TEX0;
+	m_created_as_TEX0 = TEX0;
 
 	m_valid = GSVector4i::zero();
 }

@@ -36,6 +36,7 @@ public:
 
 	public:
 		GSTexture* m_texture;
+		GIFRegTEX0 m_created_as_TEX0; // Keep the initial format
 		GIFRegTEX0 m_TEX0;
 		GIFRegTEXA m_TEXA;
 		int m_age;
